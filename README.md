@@ -1,6 +1,9 @@
-![NativeExtractor Logo](./logo.png)
-
-[![License](https://img.shields.io/badge/License-LGPLv3-blue.svg)](https://shields.io/) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com) [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)
+<p align="center"><img src="https://raw.githubusercontent.com/SpongeData-cz/nativeextractor/main/logo.svg" width="400" /></p>
+<p align="center">
+<a href="https://shields.io/"><img src="https://img.shields.io/badge/License-LGPLv3-blue.svg" alt="License LGPLv3"></a>
+<a href="http://makeapullrequest.com"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square" alt="PRs Welcome"></a>
+<a href="https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity"><img src="https://img.shields.io/badge/Maintained%3F-yes-green.svg" alt="Maintenance"></a>
+</p>
 
 # NativeExtractor
 NativeExtractor is a powerful tool that analyzes plaintext and extracts entities from it. Main features of NativeExtractor are:
@@ -37,6 +40,7 @@ NativeExtractor is a powerful tool that analyzes plaintext and extracts entities
 * [Instant Examples](#instant-examples)
 * [Other language bindings](#other-language-bindings)
 * [Contributing](#contributing)
+* [Special thanks](#special-thanks)
 
 # Getting started
 Compilation process is fully tested on Ubuntu 18.04 and 20.04, however other distros should run without complications. It is expectable that NativeExtractor should run on BSDs as well. MacOS is not supported.
@@ -483,4 +487,6 @@ When contributing code, make sure build process is functional and hold [Programm
 Before sending a pull request, be sure to have tests for meaningful cases (new features, bugs, ...).
 
 # Special thanks
-We thank to NativeExtractor logo creator - [Adam Říha](https://adamriha.com/). We also thank to our code contributors.
+We thank to NativeExtractor logo creator - [Adam Říha](https://adamriha.com/) from [Gaupi](https://gaupi.cz).
+
+We also thank to our code contributors.
