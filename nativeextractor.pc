@@ -1,0 +1,10 @@
+prefix=/usr
+exec_prefix=${prefix}
+includedir=${prefix}/include
+libdir=${exec_prefix}/lib
+
+Name: nativeextractor
+Description: Nativeextractor library provides power of native code to retrieve interesting entities (Phone numbers, Emails, ...) from a utf-8 file.
+Version: 0.1.0
+Cflags: -I${includedir}/nativeextractor
+Libs: -L${libdir} -lnativeextractor

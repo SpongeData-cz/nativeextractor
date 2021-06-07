@@ -1,0 +1,8 @@
+abc
+def
+abcdef
+domain
+[abcdef][abc-f][a-f]
+???
+*def
+*
