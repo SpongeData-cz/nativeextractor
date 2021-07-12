@@ -224,7 +224,7 @@ void any_string_wildcard(void **arg) {
   );
   test_glob("*", fullpath, 26);
   test_glob("*kle", fullpath, 2);
-  test_glob("T*kle", fullpath, 1);
+  test_glob("T*kle", fullpath, 2);
   test_glob("*i*k*", fullpath, 2);
 }
 

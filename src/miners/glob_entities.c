@@ -20,6 +20,7 @@
 #include <nativeextractor/miner.h>
 #include <nativeextractor/unicode.h>
 
+#include <gmodule.h>
 
 /**
  * Checks if expr is false, then skips miner until EOF or next delimiter
@@ -37,7 +38,11 @@
 
 
 static bool match_character(miner_c* m, char* character) {
-  return m->match(m, character, Right);
+  gunichar c = unicode_to_int(character);
+  gunichar lc = g_unichar_tolower(c);
+  gunichar uc = g_unichar_toupper(c);
+
+  return m->match(m, (char*)&lc, Right) || m->match(m, (char*)&uc, Right);
 }
 
 static bool match_any_character(miner_c* m) {
@@ -56,7 +61,7 @@ static bool match_any_string(miner_c* m, const char* glob) {
 static bool match_range(miner_c* m, char* from, char* to) {
   int end = unicode_to_int(to);
   for (int codepoint = unicode_to_int(from); codepoint <= end; ++codepoint) {
-    if (match_character(m, &codepoint)) {
+    if (match_character(m, (char*)&codepoint)) {
       return true;
     }
   }
@@ -64,7 +69,7 @@ static bool match_range(miner_c* m, char* from, char* to) {
 }
 
 static bool starts_with_delimiter(const char* glob) {
-  char* c = glob;
+  char* c = (char*)glob;
 
   switch (*c) {
     case '[': {
@@ -151,10 +156,10 @@ static occurrence_t* match_glob_impl(miner_c* m) {
 
           while (true) {
             m->mark_pos(m, &pos);
-            m->params = new_params;
+            m->params = (void*)new_params;
             occurrence_t* rec = match_glob_impl(m);
-            m->params = save_params;
-            m->end_last = save_end_last;
+            m->params = (void*)save_params;
+            m->end_last = (char*)save_end_last;
 
             if (rec) {
               free(rec);
@@ -252,7 +257,7 @@ static bool is_glob(const char* glob) {
   char* prelast = NULL;
   char* last = NULL;
 
-  for (char* p = glob; *p != '\0'; ++p) {
+  for (char* p = (char*)glob; *p != '\0'; ++p) {
     if (escape) {
       escape = false;
       continue;
@@ -299,7 +304,7 @@ miner_c* match_glob(const char* glob) {
     fprintf(stderr, "'%s' is not a syntactically correct glob!\n", glob);
     return NULL;
   }
-  return miner_c_create("Glob", glob, match_glob_impl);
+  return miner_c_create("Glob", (void*)glob, match_glob_impl);
 }
 
 const char* meta[] = {
