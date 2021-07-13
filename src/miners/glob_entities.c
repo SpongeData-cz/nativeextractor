@@ -38,11 +38,20 @@
 
 
 static bool match_character(miner_c* m, char* character) {
-  gunichar c = unicode_to_int(character);
-  gunichar lc = g_unichar_tolower(c);
-  gunichar uc = g_unichar_toupper(c);
+  gunichar c = g_utf8_get_char(character);
+  char buff[6];
 
-  return m->match(m, (char*)&lc, Right) || m->match(m, (char*)&uc, Right);
+  g_unichar_to_utf8(g_unichar_tolower(c), buff);
+  if (m->match(m, buff, Right)) {
+    return true;
+  }
+
+  g_unichar_to_utf8(g_unichar_toupper(c), buff);
+  if (m->match(m, buff, Right)) {
+    return true;
+  }
+
+  return false;
 }
 
 static bool match_any_character(miner_c* m) {
@@ -134,7 +143,7 @@ static occurrence_t* match_glob_impl(miner_c* m) {
       m->mark_pos(m, &startpos);
     }
 
-    int ch = unicode_to_int(glob);
+    uint32_t ch = unicode_to_int(glob);
     size_t chlen = unicode_getbytesize(glob);
 
     bool no_special = false;
