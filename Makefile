@@ -1,6 +1,6 @@
 project = NativeExtractor
 project_libname = nativeextractor
-flags = -std=c11 -pthread
+flags = -std=gnu11 -pthread
 links = glib-2.0
 test_dir = build/tests
 miners_install_dir = /usr/lib/nativeextractor_miners

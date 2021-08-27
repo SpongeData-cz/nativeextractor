@@ -22,8 +22,6 @@
 #include <nativeextractor/terminal.h>
 #include <nativeextractor/unicode.h>
 
-char* strdup(const char*);
-
 occurrence_t* miner_c_run(miner_c* self) {
   occurrence_t* o = self->matcher(self);
   self->pos_last = (self->end > self->stream->pos) ? self->end : self->stream->pos;

@@ -32,8 +32,6 @@
  * For full documentation please navigate through the menu on the left.
  */
 
-char *strdup(const char *s);
-
 void* thread_fn(void* args) {
   mark_t mark;
   extractor_c * extractor = (extractor_c*)args;
