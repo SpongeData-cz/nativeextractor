@@ -16,6 +16,7 @@
  */
 
 #include <nativeextractor/extractor.h>
+#include <stdlib.h>
 #include <dlfcn.h>
 #include <errno.h>
 #include <pthread.h>
@@ -81,6 +82,29 @@ void* thread_fn(void* args) {
   pthread_exit(NULL);
 }
 
+int occurrence_t_compare(const occurrence_t * o1, const occurrence_t * o2){
+  if( o1->pos > o2->pos )
+    return 1;
+  if( o1->pos < o2->pos )
+    return -1;
+  if(o1->len < o2->len)
+    return -1;
+  if(o1->len > o2->len)
+    return 1;
+  return 0;
+}
+
+void occurrence_t_sort(occurrence_t ** batch) {
+  unsigned o_count = 0;
+  occurrence_t ** pbatch = batch;
+
+  while(*(pbatch++)) {
+    o_count++;
+  }
+
+  qsort(batch, o_count, sizeof(occurrence_t*), (__compar_fn_t)occurrence_t_compare);
+}
+
 occurrence_t** next(extractor_c * self, unsigned batch) {
   pthread_mutex_lock(&(self->mutex_extractor));
   if (!self->threads_inited) {
@@ -120,6 +144,10 @@ occurrence_t** next(extractor_c * self, unsigned batch) {
   *pout = NULL;
 
   pthread_mutex_unlock(&(self->mutex_extractor));
+
+  if( self->flags & E_SORT_RESULTS ) {
+    occurrence_t_sort(out);
+  }
 
   return out;
 }
@@ -225,14 +253,15 @@ bool extractor_c_add_miner_from_so(extractor_c * self,
       ns->ldsymb = strdup(miner_name);
       ns->params = params;
 
+
       ns->meta = malloc((metalen + 1) * sizeof(char*));
       for (size_t i = 0; i < metalen; ++i) {
         ns->meta[i] = strdup(meta[i]);
       }
       ns->meta[metalen] = NULL;
-
       ns->ldptr = dlfound_p;
 
+      /* add to the end of .dlsymbols */
       *dls = ns;
 
       self->dlsymbols = realloc(self->dlsymbols, (dls_count +2) * sizeof(dl_symbol_t*));

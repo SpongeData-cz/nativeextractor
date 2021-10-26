@@ -25,6 +25,9 @@
 
 #define DEFAULT_THREADS 8 // TODO: compute best threads
 
+#define E_SORT_RESULTS 1
+
+
 typedef struct dl_symbol_t {
   /** Path to the .so library. */
   const char * ldpath;
@@ -127,6 +130,7 @@ typedef struct extractor_c {
   size_t targs_count;// = 0;
   bool threads_inited;
   bool terminate_p;
+  unsigned flags;
 } extractor_c;
 
 extractor_c * extractor_c_new(int threads, miner_c ** miners);

@@ -15,8 +15,6 @@
  * along with NativeExtractor. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define _GNU_SOURCE
-
 #include <stdarg.h>
 #include <stddef.h>
 #include <setjmp.h>

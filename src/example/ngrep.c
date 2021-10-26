@@ -15,8 +15,6 @@
  * along with NativeExtractor. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define _GNU_SOURCE
-
 #include <nativeextractor/common.h>
 #include <glib-2.0/glib.h>
 #include <nativeextractor/extractor.h>
