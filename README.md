@@ -229,11 +229,17 @@ An extractor may have these flags enabled:
      * `A`, `C` and `D` are all enclosed in `B`.
      * Therefore, only `B` is returned.
 
-To set flags for an extractor, use bitwise operations on the `flags` property. 
+To set or unset flags for an extractor, use the `set_flags` and `unset_flags` 
+methods.
 For example:
 ```c
 extractor_c *ex = extractor_c_new(...);
-ex->flags |= (E_SORT_RESULTS | E_NO_ENCLOSED_OCCURRENCES);
+
+ex->set_flags(ex, E_SORT_RESULTS | E_NO_ENCLOSED_OCCURRENCES);
+// extractor now sorts results and discards enclosed occurrences
+
+ex->unset_flags(ex, E_NO_ENCLOSED_OCCURRENCES);
+// extractor no longer discards enclosed occurrences
 ```
 
 # Miners

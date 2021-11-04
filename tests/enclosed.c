@@ -188,7 +188,7 @@ void single_batch(void **arg) {
   };
   extractor_c *ex = make_extractor(globs);
   extractor_c *ex2 = make_extractor(globs);
-  ex2->flags |= E_NO_ENCLOSED_OCCURRENCES;
+  ex2->set_flags(ex2, E_NO_ENCLOSED_OCCURRENCES);
 
   test_match(ex, 10, fullpath, 3);
   test_match(ex2, 10, fullpath, 1);
@@ -212,7 +212,7 @@ void multi_batch(void **arg) {
   };
   extractor_c *ex = make_extractor(globs);
   extractor_c *ex2 = make_extractor(globs);
-  ex2->flags |= E_NO_ENCLOSED_OCCURRENCES;
+  ex2->set_flags(ex2, E_NO_ENCLOSED_OCCURRENCES);
 
   test_match(ex, 3, fullpath, 6);
   test_match(ex2, 3, fullpath, 3);
@@ -236,7 +236,7 @@ void small_batch(void **arg) {
   };
   extractor_c *ex = make_extractor(globs);
   extractor_c *ex2 = make_extractor(globs);
-  ex2->flags |= E_NO_ENCLOSED_OCCURRENCES;
+  ex2->set_flags(ex2, E_NO_ENCLOSED_OCCURRENCES);
 
   test_match(ex, 1, fullpath, 6);
   test_match(ex2, 1, fullpath, 3);
@@ -264,7 +264,7 @@ void identical_ranges(void **arg) {
   };
   extractor_c *ex = make_extractor(globs);
   add_regex(ex, globs[0]);
-  ex->flags |= E_NO_ENCLOSED_OCCURRENCES;
+  ex->set_flags(ex, E_NO_ENCLOSED_OCCURRENCES);
 
   test_match(ex, 1, fullpath, 2);
 }

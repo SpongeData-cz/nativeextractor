@@ -480,6 +480,38 @@ void extractor_set_last_error(extractor_c * self, const char * err) {
   pthread_mutex_unlock(&(self->mutex_extractor));
 }
 
+/**
+ * Set or unset flags.
+ *
+ * @param self the extractor
+ * @param flags the flags
+ * @param value true or false
+ *
+ * @returns true on success
+ */
+bool _set_flags(extractor_c * self, unsigned flags, bool value) {
+  // only allow defined flags
+  if (flags & ~(E_NO_ENCLOSED_OCCURRENCES | E_SORT_RESULTS)) {
+    return false;
+  }
+
+  // NOTE: check flag interference here
+
+  self->flags = value
+      ? self->flags | flags
+      : self->flags & ~flags;
+
+  return true;
+}
+
+bool extractor_set_flags(extractor_c * self, unsigned flags) {
+  return _set_flags(self, flags, true);
+}
+
+bool extractor_unset_flags(extractor_c * self, unsigned flags) {
+  return _set_flags(self, flags, false);
+}
+
 extractor_c * extractor_c_new(int threads, miner_c ** miners){
   extractor_c * out = calloc(1, sizeof(extractor_c));
   out->threads_count = (threads < 1 ? sysconf(_SC_NPROCESSORS_ONLN) : threads);
@@ -497,6 +529,8 @@ extractor_c * extractor_c_new(int threads, miner_c ** miners){
   out->destroy = extractor_c_destroy;
   out->get_last_error = extractor_get_last_error;
   out->set_last_error = extractor_set_last_error;
+  out->set_flags = extractor_set_flags;
+  out->unset_flags = extractor_unset_flags;
 
   out->stream = NULL;//stream_c_new();
   out->last_error = NULL;

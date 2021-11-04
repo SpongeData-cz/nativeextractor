@@ -100,6 +100,24 @@ typedef struct extractor_c {
   void (*destroy)(struct extractor_c* self);
 
   /**
+   * Sets flags.
+   *
+   * @param flags the flags
+   *
+   * @returns true on success
+   */
+  bool (*set_flags)(struct extractor_c * self, unsigned flags);
+
+  /**
+   * Unsets flags.
+   *
+   * @param flags the flags
+   *
+   * @returns true on success
+   */
+  bool (*unset_flags)(struct extractor_c * self, unsigned flags);
+
+  /**
    * List of miners
    */
   miner_c ** miners;
