@@ -25,8 +25,10 @@
 
 #define DEFAULT_THREADS 8 // TODO: compute best threads
 
-#define E_SORT_RESULTS 1
-
+/** Sort returned occurrences by position and length. */
+#define E_SORT_RESULTS (1<<0)
+/** Do not return enclosed occurrences. */
+#define E_NO_ENCLOSED_OCCURRENCES (1<<1)
 
 typedef struct dl_symbol_t {
   /** Path to the .so library. */
@@ -130,6 +132,7 @@ typedef struct extractor_c {
   size_t targs_count;// = 0;
   bool threads_inited;
   bool terminate_p;
+  size_t last_max; // used for E_NO_ENCLOSED_OCCURRENCES
   unsigned flags;
 } extractor_c;
 

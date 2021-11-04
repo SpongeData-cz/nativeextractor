@@ -17,30 +17,33 @@ NativeExtractor is a powerful tool that analyzes plaintext and extracts entities
  * Bindings to Node.js and Python included.
 
 # Table of Contents
-* [Getting started](#getting-started)
-  * [Build process](#build-process)
-  * [Usage](#usage)
-* [Folder structure](#folder-structure)
-* [Programming style](#programming-style)
-  * [Coding conventions](#coding-conventions)
-  * [Object oriented programming in C](#object-oriented-programming-in-c)
-* [Extractor](#extractor)
-* [Miners](#miners)
-  * [Hello miner](#hello-miner)
-  * [Building miners](#building-miners)
-  * [Advanced miners](#advanced-miners)
-  * [Testing miners](#testing-miners)
-* [Glob miner](#glob-miner)
-  * [Glob miner examples](#glob-miner-examples)
-  * [Notes on glob miner implementation](#notes-on-glob-miner-implementation)
-* [Native RegExps](#native-regexps)
-  * [Native RegExps in practice](#native-regexps-in-practice)
-* [Patty trie](#patty-trie)
-  * [Example of use](#example-of-use)
-* [Instant Examples](#instant-examples)
-* [Other language bindings](#other-language-bindings)
-* [Contributing](#contributing)
-* [Special thanks](#special-thanks)
+- [NativeExtractor](#nativeextractor)
+- [Table of Contents](#table-of-contents)
+- [Getting started](#getting-started)
+  - [Build process](#build-process)
+  - [Usage](#usage)
+- [Folder structure](#folder-structure)
+- [Programming style](#programming-style)
+  - [Coding conventions](#coding-conventions)
+  - [Object oriented programming in C](#object-oriented-programming-in-c)
+- [Extractor](#extractor)
+  - [Flags](#flags)
+- [Miners](#miners)
+  - [Hello miner](#hello-miner)
+  - [Building miners](#building-miners)
+  - [Advanced miners](#advanced-miners)
+  - [Testing miners](#testing-miners)
+- [Glob miner](#glob-miner)
+  - [Glob miner examples](#glob-miner-examples)
+  - [Notes on glob miner implementation](#notes-on-glob-miner-implementation)
+- [Native RegExps](#native-regexps)
+  - [Native RegExps in practice](#native-regexps-in-practice)
+- [Patty trie](#patty-trie)
+  - [Example of use](#example-of-use)
+- [Instant Examples](#instant-examples)
+- [Other language bindings](#other-language-bindings)
+- [Contributing](#contributing)
+- [Special thanks](#special-thanks)
 
 # Getting started
 Compilation process is fully tested on Ubuntu 18.04 and 20.04, however other distros should run without complications. It is expectable that NativeExtractor should run on BSDs as well. MacOS is not supported.
@@ -202,6 +205,36 @@ Extractor does these operations (when calling `next()` method):
  * Accumulates found matches into a NULL-terminated array.
  * Moves head to the next UTF-8 character (from left to the right) in the stream.
  * Extractor does these operations repeatedly until it reaches end of the stream or a maximum size of a bulk.
+
+## Flags
+An extractor may have these flags enabled:
+ * `E_SORT_RESULTS`
+   * Sorts returned occurrences by position (ascending) and length (descending).
+ * `E_NO_ENCLOSED_OCCURRENCES`
+   * Filters out any enclosed occurrences.
+   * An occurrence `A` is enclosed in occurrence `B` 
+     if `A.start >= B.start` and `A.end <= B.end`.
+   * For example:
+     * `A`: `{start: 3, end: 6}`
+     * `B`: `{start: 1, end: 9}`
+     * `C`: `{start: 1, end: 7}`
+     * `D`: `{start: 3, end: 9}`
+     * Or as ASCII-art:
+        ```
+        A:  |--|
+        B: |-------|
+        C: |-----|
+        D:  |------|
+        ```
+     * `A`, `C` and `D` are all enclosed in `B`.
+     * Therefore, only `B` is returned.
+
+To set flags for an extractor, use bitwise operations on the `flags` property. 
+For example:
+```c
+extractor_c *ex = extractor_c_new(...);
+ex->flags |= (E_SORT_RESULTS | E_NO_ENCLOSED_OCCURRENCES);
+```
 
 # Miners
 Each miner consists of at least two functions - one for creating its instances and one for matching occurrences.

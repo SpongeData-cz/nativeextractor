@@ -122,6 +122,13 @@ test:
 		`pkg-config --libs $(links)` -ldl \
 		-o $(test_dir)/$(project)_regex_miner \
 
+	$(CC) $(flags) -Iinclude -rdynamic \
+		`find ./src/ -maxdepth 1 -type f ! -name "main.c" -name "*.c"` tests/enclosed.c \
+		`pkg-config --cflags $(links)` \
+		`pkg-config --cflags --libs cmocka` \
+		`pkg-config --libs $(links)` -ldl \
+		-o $(test_dir)/$(project)_enclosed \
+
 .PHONY: default
 default: all-miners build
 

@@ -59,12 +59,29 @@ void* thread_fn(void* args) {
       if (miner->stream->pos >= MAX(miner->pos_last, miner->end_last)) {
         miner->mark_pos(miner, &mark);
         occurrence_t* p = miner->run(miner);
+
         if (p) {
+          // add occurrence
+          size_t last_pos = p->pos + p->len;
+
           pthread_mutex_lock(&(extractor->mutex_pout));
+
+          if (extractor->flags & E_NO_ENCLOSED_OCCURRENCES) {
+            if ((extractor->last_max > 0)
+                && (last_pos <= extractor->last_max)) {
+              // skip enclosed occurrence
+              free(p);
+              goto exit_mutex;
+            }
+          }
+
           **(targs->pout) = p;
           ++(*(targs->pout));
+
+exit_mutex:
           pthread_mutex_unlock(&(extractor->mutex_pout));
         }
+
         if (miner->stream->unicode_offset > mark.unicode_offset) {
           batch -= (miner->stream->unicode_offset - mark.unicode_offset - 1);
           miner->stream->move(miner->stream, -1);
@@ -105,6 +122,86 @@ void occurrence_t_sort(occurrence_t ** batch) {
   qsort(batch, o_count, sizeof(occurrence_t*), (__compar_fn_t)occurrence_t_compare);
 }
 
+/**
+ * Destructively removes "enclosed "occurrences from passed array and returns 
+ * pointer to filtered occurrences. 
+ * The passed array may no longer be valid after this function call and 
+ * the return value should be used for subsequent use of the original array.
+ *
+ * Example:
+ * Occurrences are shown as spans [pos:pos + len].
+ * <pre>
+ * A: |----------|      // not enclosed in any occurrence, to be kept
+ * B: |---|             // enclosed in A, to be removed
+ * C:      |----|       // enclosed in A and E, to be removed
+ * D:   |------|        // enclosed in A, to be removed
+ * E:    |----------|   // not enclosed in any occurrence, to be kept
+ * </pre>
+ *
+ * @param occurrences the occurrences to filter
+ *
+ * @return filtered occurrences; use in place of passed array
+ */
+occurrence_t **filter_longest_occurrences(occurrence_t **occurrences) {
+  occurrence_t **pa;
+  occurrence_t **pb;
+
+  for (pa = occurrences; *pa != NULL; ++pa) {
+    for (pb = pa + 1; *pb != NULL; ++pb) {
+      occurrence_t *a = *pa;
+      occurrence_t *b = *pb;
+      size_t aend = a->pos + a->len;
+      size_t bend = b->pos + b->len;
+
+      if (a->label == NULL) {
+        // already filtered out
+        break;
+      }
+
+      if (b->label == NULL) {
+        // already filtered out
+        continue;
+      }
+
+      if ((a->pos == b->pos) && (a->len == b->len)) {
+        // keep identical occurrences with different labels
+        continue;
+      }
+
+      if ((a->pos <= b->pos) && (bend <= aend)) {
+        b->label = NULL; // mark for deletion
+      }
+
+      if ((b->pos <= a->pos) && (aend <= bend)) {
+        a->label = NULL; // mark for deletion
+      }
+    }
+  }
+
+  // shrink array to not contain occurrences marked for deletion
+  size_t found = 0;
+  /** true if array needs to be shrunk */
+  bool freed = false;
+  pa = pb = occurrences;
+  while (*pb != NULL) {
+    occurrence_t *occ = *pb;
+    if (occ->label != NULL) {
+      *pa = *pb;
+      ++pa;
+      ++found;
+    } else {
+      freed = true;
+      free(occ);
+    }
+    ++pb;
+  }
+  *pa = NULL;
+
+  return freed
+      ? realloc(occurrences, (found + 1) * sizeof (occurrence_t *))
+      : occurrences;
+}
+
 occurrence_t** next(extractor_c * self, unsigned batch) {
   pthread_mutex_lock(&(self->mutex_extractor));
   if (!self->threads_inited) {
@@ -142,6 +239,17 @@ occurrence_t** next(extractor_c * self, unsigned batch) {
   }
 
   *pout = NULL;
+
+  if (self->flags & E_NO_ENCLOSED_OCCURRENCES) {
+    out = filter_longest_occurrences(out);
+    size_t max_pos = self->last_max;
+    occurrence_t **occ = out;
+    while (*occ != NULL) {
+      max_pos = MAX(max_pos, (*occ)->pos + (*occ)->len);
+      ++occ;
+    }
+    self->last_max = max_pos;
+  }
 
   pthread_mutex_unlock(&(self->mutex_extractor));
 
@@ -394,6 +502,7 @@ extractor_c * extractor_c_new(int threads, miner_c ** miners){
   out->last_error = NULL;
   out->targs_count = 0;
   out->terminate_p = false;
+  out->last_max = 0;
 
   pthread_mutex_init(&(out->mutex_pout), NULL);
   pthread_mutex_init( &(out->mutex_targs), NULL);
