@@ -4,6 +4,7 @@ flags = -std=c11 -D_GNU_SOURCE -pthread
 links = glib-2.0
 test_dir = build/tests
 miners_install_dir = /usr/lib/nativeextractor_miners
+main_path = src/main.c
 
 # Use config=release for release builds
 ifeq ($(config), release)
@@ -29,8 +30,11 @@ build:
 	-mkdir -p $(dir)
 	$(CC) $(flags) -fPIC -Iinclude -rdynamic \
 		`pkg-config --cflags $(links)` \
-		-c src/*.c
+		-c `find src/*.c -not -name "main.c"`
 	$(CC) -shared -o $(dir)/lib$(project_libname).so *.o
+	if [ -f "$(main_path)" ]; then \
+		gcc "$(main_path)" `pkg-config nativeextractor --libs --cflags` -o $(dir)/NativeExtractor; \
+	fi
 
 .PHONY: examples
 examples:
@@ -74,7 +78,7 @@ install:
 	make config=release install=true all-miners
 	rm -rf /usr/include/$(project_libname)/
 	mkdir -p /usr/include/$(project_libname)/
-	cp -rf ./include/$(project_libname)/ /usr/include/$(project_libname)/
+	cp -rf ./include/$(project_libname)/ /usr/include/
 	mkdir -p /usr/lib/
 	rm -f /usr/lib/$(project_libname).so
 	cp build/release/lib$(project_libname).so /usr/lib/lib$(project_libname).so

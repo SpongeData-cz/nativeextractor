@@ -55,7 +55,7 @@ static bool match_character(miner_c* m, char* character) {
 }
 
 static bool match_any_character(miner_c* m) {
-  bool ret = !(m->match_delimiter(m, Stay));
+  bool ret = (m->can_move(m, Right) && !(m->match_delimiter(m, Stay)));
   if (ret) {
     m->move(m, Right);
   }

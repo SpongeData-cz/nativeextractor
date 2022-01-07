@@ -163,6 +163,57 @@ void test_glob(const char *glob, const char *fullpath, size_t matches) {
 }
 
 /**
+ * Loads file contents into pre-allocated char buffer.
+ * 
+ * @param fullpath the path to file
+ * @param target the pre-allocated buffer
+ * @param bufsize the size of pre-allocated buffer
+ */
+void loadfile(const char *fullpath, char *target, size_t bufsize) {
+  FILE *f = fopen(fullpath, "r");
+  if (f == NULL) {
+    return;
+  }
+  fgets(target, bufsize, f);
+  fclose(f);
+}
+
+/**
+ * Tests if a glob pattern is found a specific number of times in a file. 
+ * Fails the cmocka test if not. 
+ * Unlike test_glob, this function uses a buffer_stream and sets trailing 
+ * characters to non-delimiters to test whether trailing '?' wildcards are 
+ * handled correctly.
+ *
+ * @param glob the glob pattern
+ * @param fullpath the file
+ * @param matches intended number of matches
+ */
+void test_glob2(const char *glob, const char *fullpath, size_t matches) {
+  extractor_c *ex = make_glob(glob);
+
+  const size_t bufsize = 500;
+  char *contents = malloc(bufsize * sizeof(char));
+
+  loadfile(fullpath, contents, bufsize - 5);
+  size_t len = strlen(contents);
+
+  contents[len] = '1';
+  contents[len+1] = '2';
+  contents[len+2] = '3';
+  contents[len+3] = '4';
+
+  stream_buffer_c *s = stream_buffer_c_new(contents, len);
+  ex->set_stream(ex, (stream_c*)s);
+  occurrence_t **res = ex->next(ex, 1000);
+  assert_int_equal(occurrence_len(res), matches);
+  free_occurrences(res);
+  free(contents);
+
+  DESTROY(s);
+}
+
+/**
  * Creates a directory for temporary files.
  */
 void init(void) {
@@ -206,6 +257,8 @@ void any_character_wildcard(void **arg) {
   const char *fullpath = make_file("bat mat mad pat lat lot lit");
   test_glob("l?t", fullpath, 3);
   test_glob("?a?", fullpath, 5);
+  fullpath = make_file("http://2432.spongedata.cz");
+  test_glob2("????", fullpath, 2);
 }
 
 /**

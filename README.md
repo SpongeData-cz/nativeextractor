@@ -74,7 +74,7 @@ Note that install script will install also headers into your `/usr/include`.
 You can simply use `pkg-config` to generate gcc/clang flags:
 
 ```sh
-gcc main.c `pkg-config --cflags --libs lnativeextractor` -o netest.bin
+gcc main.c `pkg-config nativeextractor --libs --cflags` -o netest.bin
 ```
 
 Declare following includes in your `main.c` file for full functionality, or see the docs for individual headers.
