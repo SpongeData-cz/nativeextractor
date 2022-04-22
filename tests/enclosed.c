@@ -270,6 +270,25 @@ void identical_ranges(void **arg) {
 }
 
 /**
+ * Tests whether enclosed occurrences are handled correctly when using multiple 
+ * streams with a single extractor.
+ *
+ * @param arg whatever cmocka passes here
+ */
+void stream_reset(void **arg) {
+  const char *fullpath = make_file("abc abc");
+  const char *globs[] = {
+    "abc",
+    NULL
+  };
+  extractor_c *ex = make_extractor(globs);
+  ex->set_flags(ex, E_NO_ENCLOSED_OCCURRENCES);
+
+  test_match(ex, 1, fullpath, 2);
+  test_match(ex, 1, fullpath, 2);
+}
+
+/**
  * Destroys created extractors and deletes created files.
  */
 void cleanup(void) {
@@ -317,7 +336,8 @@ int main(int argc, char *argv[]) {
     cmocka_unit_test(single_batch),
     cmocka_unit_test(multi_batch),
     cmocka_unit_test(small_batch),
-    cmocka_unit_test(identical_ranges)
+    cmocka_unit_test(identical_ranges),
+    cmocka_unit_test(stream_reset)
   };
 
   atexit(cleanup);

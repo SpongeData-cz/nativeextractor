@@ -279,6 +279,8 @@ bool extractor_c_set_stream(extractor_c * self, stream_c * stream){
     self->miners[m]->set_stream(self->miners[m], self->stream);
   }
 
+  self->last_max = 0;
+
   pthread_mutex_unlock(&(self->mutex_extractor));
 
   return true;
