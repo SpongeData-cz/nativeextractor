@@ -195,6 +195,87 @@ void check_data(){
   }
 }
 
+void check_multichar_edges() {
+  /*
+   * The tree below has this structure:
+   *
+   * a
+   *  a
+   *   a
+   *    a\0
+   *    b\0
+   *    c\0
+   *    d\0
+   *    e\0
+   *    fa       <-- edge with multiple characters
+   *      a\0
+   *      b\0
+   *      c\0
+   *      d\0
+   *      e\0
+   *      f\0
+   *      g\0
+   *      h\0
+   *    g\0
+   *   b\0
+   *  b
+   *   a\0
+   *   b\0
+   *
+   * The bug being tested here only checked the first character of the edge 
+   * and continued if it matched, regardless of other characters in the edge. 
+   * This could lead to a terminal node and ultimately return a matched prefix 
+   * that is not present in the trie.
+   */
+  char *words[] = {
+    "aaaa",
+    "aaab",
+    "aaac",
+    "aaad",
+    "aaae",
+    "aaafaa",
+    "aaafab",
+    "aaafac",
+    "aaafad",
+    "aaafae",
+    "aaafaf",
+    "aaafag",
+    "aaafah",
+    "aaag",
+    "aab",
+    "aba",
+    "abb",
+    NULL
+  };
+  patricia_c *p = patricia_c_create(NULL);
+  for (unsigned i = 0; words[i] != NULL; ++i) {
+    char *value = words[i];
+    p->insert(p, value, 0, strlen(value));
+  }
+
+  char *search[] = {
+    "aaafah",
+    "aaafb",
+    NULL
+  };
+  const bool terminal[] = {
+    true,
+    false
+  };
+  const unsigned matches[] = {
+    6,
+    4
+  };
+
+  for (unsigned i = 0; search[i] != NULL; ++i) {
+    char *value = search[i];
+    patricia_node_t *node = NULL;
+    uint32_t match = p->search_ext(p, value, strlen(value), &node);
+    assert_int_equal(match, matches[i]);
+    assert_int_equal(node->is_terminal, terminal[i]);
+  }
+}
+
 void add_empty_str() {
   g_pat->insert(g_pat, "", 0, 0);
   assert_true( g_pat->search(g_pat, "", 0) > 0 );
@@ -243,6 +324,7 @@ int main(int argc, char *argv[]) {
     cmocka_unit_test(patty_save_reopen),
     cmocka_unit_test(rand_check),
     cmocka_unit_test(check_data),
+    cmocka_unit_test(check_multichar_edges),
     cmocka_unit_test(cleanup)
   };
 
