@@ -18,6 +18,7 @@
 #include <nativeextractor/patricia.h>
 #include <nativeextractor/csv_parser.h>
 #include <string.h>
+#include <stdio.h>
 
 static inline void _print_edge(patricia_edge_t* edge, uint32_t indent, patricia_c * tree);
 
@@ -161,7 +162,6 @@ static inline int64_t find_log(patricia_node_t * node, char * str, uint32_t str_
   patricia_edge_t * edge;
 
   while (rmax >= lmin) {
-    // printf("edge_count: %u, pivot: %ld\n", node->edge_count, pivot);
 
     edge = &(PATRICIA_C_EDGES(node)[pivot]);
 
@@ -174,6 +174,18 @@ static inline int64_t find_log(patricia_node_t * node, char * str, uint32_t str_
         lmin = pivot+1;
         break;
       case 0:
+        for (
+          uint32_t j = unicode_getbytesize((char*)csv_lookup + edge->str_start);
+          j < edge->str_len;
+          j += unicode_getbytesize((char*)csv_lookup + edge->str_start)
+        ) {
+          uint32_t ec = unicode_to_int((char*)csv_lookup + edge->str_start + j);
+          uint32_t sc = unicode_to_int(str + j);
+          int cmp = CMP(ec, sc);
+          if (cmp != 0) {
+            return -1;
+          }
+        }
         return pivot;
         break;
       case 1:
@@ -193,11 +205,18 @@ static inline int64_t find_linear(patricia_node_t * node, char * str, uint32_t s
     if (str_len < edge->str_len) {
       continue;
     }
-    uint32_t ec = unicode_to_int((char*)csv_lookup + edge->str_start);
-    uint32_t sc = unicode_to_int(str);
-    int cmp = CMP(ec, sc);
-    if (cmp == 0) {
-      return (int64_t)i;
+    bool passed = true;
+    for (uint32_t j = 0; j < edge->str_len; j += unicode_getbytesize((char*)csv_lookup + edge->str_start)) {
+      uint32_t ec = unicode_to_int((char*)csv_lookup + edge->str_start + j);
+      uint32_t sc = unicode_to_int(str + j);
+      int cmp = CMP(ec, sc);
+      if (cmp != 0) {
+        passed = false;
+        break;
+      }
+    }
+    if (passed) {
+      return i;
     }
   }
   return -1;
@@ -233,7 +252,7 @@ static inline uint32_t _search(
   char* str, uint64_t str_start, uint64_t str_offset, uint32_t str_len,
   const char* lookup_csv)
 {
-  int64_t i = ((*node)->edge_count <= 5)
+  int64_t i = ((*node)->edge_count <= 5) // TODO linear/log threshold constant thing
     ? find_linear(*node, str + str_start + str_offset, str_len - str_offset, lookup_csv)
     : find_log(*node, str + str_start + str_offset, str_len - str_offset, lookup_csv);
 
@@ -255,7 +274,6 @@ static inline uint32_t _search(
   *node = PATRICIA_C_NEXT_NODE(edge, self);
   if (match_till + str_offset == str_len) {
     return str_len;
-    // return (*node)->is_terminal ? 1.0 : 0.0;
   }
 
   return _search(self, node, str, str_start, str_offset + match_till, str_len, lookup_csv);
@@ -332,7 +350,6 @@ void patricia_c_destroy(patricia_c* self) {
     patricia_node_t_destroy(self->root);
 
     if (self->csv != NULL) {
-      //DESTROY(self->csv);
       self->csv = NULL; /* Decrement refcount */
     } else {
       free( self->lookup_str );
@@ -361,33 +378,6 @@ patricia_c* patricia_c_create_from_stream(stream_c * stream) {
   DESTROY(batch);
   DESTROY(csv_parser);
   return p;
-
-  // stream_c* csv = stream;
-
-  // if (!csv) {
-  //   DESTROY(csv);
-  //   return NULL;
-  // }
-
-  // patricia_c* p = patricia_c_create(csv);
-
-  // char* start = csv->start;
-  // p->lookup_str = start;
-
-  // while (!(csv->state_flags & STREAM_EOF)) {
-  //   char* chr = csv->next_char(csv);
-  //   if (*chr == '\n' && csv->pos > start) {
-  //     uint64_t str_start = (uint64_t)(start - csv->start);
-  //     uint32_t str_len = (uint32_t)(csv->pos - start - 1);
-  //     // printf(", ");
-  //     p->insert(p, csv->start, str_start, str_len);
-  //     start = csv->pos;
-  //   }
-  // }
-  // // putchar('\n');
-
-  // p->csv = csv;
-  // return p;
 }
 
 static void patricia_c_traverse_impl( patricia_node_t * node, unsigned flags,
