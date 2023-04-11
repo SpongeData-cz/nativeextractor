@@ -152,7 +152,7 @@ char * stream_c_prev_char(stream_c * self){
 }
 
 void stream_c_destroy(stream_c* self){
-  self->state_flags = STREAM_DONE;
+  self->state_flags |= STREAM_DONE;
 }
 
 stream_c * stream_c_new(){
