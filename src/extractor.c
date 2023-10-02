@@ -123,9 +123,9 @@ void occurrence_t_sort(occurrence_t ** batch) {
 }
 
 /**
- * Destructively removes "enclosed "occurrences from passed array and returns 
- * pointer to filtered occurrences. 
- * The passed array may no longer be valid after this function call and 
+ * Destructively removes "enclosed "occurrences from passed array and returns
+ * pointer to filtered occurrences.
+ * The passed array may no longer be valid after this function call and
  * the return value should be used for subsequent use of the original array.
  *
  * Example:
@@ -548,8 +548,19 @@ extractor_c * extractor_c_new(int threads, miner_c ** miners){
   out->threads = calloc(out->threads_count, sizeof(pthread_t));
 
   for (unsigned m = 0; m < out->threads_count; ++m) {
-    int result_code = pthread_create(&(out->threads[m]), NULL, thread_fn, out);
-    assert(!result_code);
+    while (1) {
+      int result_code = pthread_create(&(out->threads[m]), NULL, thread_fn, out);
+      if (result_code == EAGAIN) { // retry thread creation if system resources are missing
+        usleep(333);
+        continue;
+      }
+
+      if (!result_code) {
+        break;
+      }
+
+      assert(!result_code);
+    }
   }
 
   PRINT_DEBUG("Initialized!\n");
