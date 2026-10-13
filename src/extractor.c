@@ -517,6 +517,9 @@ bool extractor_unset_flags(extractor_c * self, unsigned flags) {
 extractor_c * extractor_c_new(int threads, miner_c ** miners){
   extractor_c * out = calloc(1, sizeof(extractor_c));
   out->threads_count = (threads < 1 ? sysconf(_SC_NPROCESSORS_ONLN) : threads);
+  if (out->threads_count > 1024) {
+    out->threads_count = 1024;
+  }
   out->miners = miners;
 
   unsigned miners_count = 0;
@@ -546,6 +549,9 @@ extractor_c * extractor_c_new(int threads, miner_c ** miners){
   sem_init(&(out->sem_targs), 0, 0);
 
   out->threads = calloc(out->threads_count, sizeof(pthread_t));
+  if (out->threads == NULL) {
+    out->threads_count = 0;
+  }
 
   for (unsigned m = 0; m < out->threads_count; ++m) {
     while (1) {
